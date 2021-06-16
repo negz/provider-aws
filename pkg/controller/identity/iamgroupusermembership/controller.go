@@ -30,6 +30,7 @@ import (
 	xpv1 "github.com/crossplane/crossplane-runtime/apis/common/v1"
 	"github.com/crossplane/crossplane-runtime/pkg/event"
 	"github.com/crossplane/crossplane-runtime/pkg/logging"
+	"github.com/crossplane/crossplane-runtime/pkg/meta"
 	"github.com/crossplane/crossplane-runtime/pkg/ratelimiter"
 	"github.com/crossplane/crossplane-runtime/pkg/reconciler/managed"
 	"github.com/crossplane/crossplane-runtime/pkg/resource"
@@ -116,6 +117,11 @@ func (e *external) Observe(ctx context.Context, mgd resource.Managed) (managed.E
 	cr.Status.AtProvider = v1alpha1.IAMGroupUserMembershipObservation{
 		AttachedGroupARN: aws.StringValue(attachedGroupObject.Arn),
 	}
+
+	// This resource is interesting in that it's a binding without its own
+	// external identity. We therefore derive an external name from the
+	// names of the group and user that are bound.
+	meta.SetExternalName(cr, cr.Spec.ForProvider.GroupName+"/"+cr.Spec.ForProvider.UserName)
 
 	cr.SetConditions(xpv1.Available())
 
